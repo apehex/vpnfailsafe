@@ -129,7 +129,11 @@ update_firewall() {
         for ((i=1; i <= ${#remotes[*]}; ++i)); do
             local port="remote_port_$i"
             local proto="proto_$i"
-            iptables -A "VPNFAILSAFE_$*" -p "${!proto%-client}" -"$sd" "${remotes[i-1]}" --"$sd"port "${!port}" "${suf[@]}"
+            # fetch the value of the expanded variable
+            port="${!port:-${cur_port:-}}"
+            proto="${!proto%-client}"
+            # defaults in case proto_N-client / remote_port_N are not available
+            iptables -A "VPNFAILSAFE_$*" -p "${proto:-udp}" -"$sd" "${remotes[i-1]}" --"$sd"port "${port:-1194}" "${suf[@]}"
             if ! icmp_rule -C "VPNFAILSAFE_$*" "${remotes[i-1]}" 2>/dev/null; then
                 icmp_rule -A "VPNFAILSAFE_$*" "${remotes[i-1]}"
             fi
